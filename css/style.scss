@@ -1,0 +1,503 @@
+/* Content Variables */
+$font: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+$font-size: 16px;
+$background-color: #f3f5f7;
+$content-width: 900px;
+$heading-color: #474b50;
+/* Header Variables */
+$header-background-color: #333941;
+$header-height: 60px;
+$header-width: 100%;
+$menu-height: 32px;
+$menu-link-color: #87919e;
+/* Login Variables */
+$login-background-color: #ffffff;
+$login-width: 400px;
+/* Form Variables */
+$form-input-border-color: #dee1e6;
+$form-input-color: #000;
+$form-input-color-placeholder: #989fa8;
+$form-icon-width: 40px;
+/* Button Variables */
+$btn-color: #3e7bd6;
+* {
+	box-sizing: border-box;
+	font-family: $font;
+    font-size: $font-size;
+}
+body, html {
+    background-color: $background-color;
+	margin: 0;
+	padding: 0;
+}
+h1, h2, h3, h4, h5, h6 {
+	margin: 0;
+	padding: 0;
+	color: $heading-color;
+}
+.form {
+	display: flex;
+	flex-flow: column;
+	width: 100%;
+	.form-label {
+		display: block;
+		padding: 20px 0 10px 0;
+		font-weight: 500;
+		font-size: 14px;
+		color: $heading-color;
+	}
+	.form-group {
+		display: flex;
+		position: relative;
+		justify-content: space-between;
+		align-items: center;
+		width: 100%;
+		.form-icon-left, .form-icon-right {
+			fill: lighten($form-input-color-placeholder, 15);
+			width: $form-icon-width;
+			position: absolute;
+			transform: translateY(-50%);
+			top: 50%;
+			pointer-events: none;
+		}
+		.form-icon-left {
+			left: 0;
+			& + .form-input {
+				padding-left: $form-icon-width;
+			}
+		}
+		.form-icon-right {
+			right: 0;
+			& + .form-input {
+				padding-right: $form-icon-width;
+			}
+		}
+		&:focus-within .form-icon-left {
+			fill: $form-input-color-placeholder;
+		}
+	}	
+	.form-input {
+		width: 100%;
+		height: 43px;
+		border: 1px solid $form-input-border-color;
+		padding: 0 15px;
+		border-radius: 4px;
+		color: $form-input-color;
+		&::placeholder {
+			color: $form-input-color-placeholder;
+		}
+	}
+	.form-link {
+		color: #2a8eeb;
+		font-weight: 500;
+		text-decoration: none;
+		font-size: 14px;
+		&:hover {
+			color: darken(#2a8eeb, 12);
+		}
+	}
+	p.register-link {
+		margin: 0;
+		padding: 20px 0 0 0;
+		font-size: 14px;
+		color: lighten($heading-color, 15);
+	}
+}
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	text-decoration: none;
+	appearance: none;
+	cursor: pointer;
+	border: 0;
+	background: $btn-color;
+	color: #FFFFFF;
+	padding: 0 14px;
+	font-size: 14px;
+	font-weight: 600;
+	border-radius: 4px;
+	height: 42px;
+	box-shadow: 0px 0px 6px 1px rgba(45, 57, 68, 0.1);
+	&:hover {
+		background: darken($btn-color, 3);
+	}
+}
+.login, .register {
+	display: flex;
+	flex-flow: column;
+    width: $login-width;
+	max-width: 95%;
+    background-color: $login-background-color;
+    box-shadow: 0px 0px 7px 1px rgba(45, 57, 68, 0.05);
+	border-radius: 5px;
+    margin: 100px auto;
+	padding: 35px;
+    h1 {
+        text-align: center;
+        font-size: 24px;
+		font-weight: 500;
+        padding: 15px 0;
+		margin: 0;
+    }
+}
+.header {
+	background-color: $header-background-color;
+	height: $header-height;
+	width: $header-width;
+	.wrapper {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		position: relative;
+		margin: 0 auto;
+		width: $content-width;
+		height: 100%;
+		h1, a {
+			display: inline-flex;
+			align-items: center;
+		}
+		h1 {
+			font-size: 20px;
+			padding: 0;
+			margin: 0;
+			color: #fff;
+			font-weight: normal;
+		}
+		.menu {
+			display: flex;
+			align-items: center;
+			a {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				height: $menu-height;
+				padding: 0 12px;
+				margin: 0 3px;
+				text-decoration: none;
+				color: #dddfe2;
+				font-weight: 500;
+				font-size: 16px;
+				line-height: 16px;
+				svg {
+					fill: #dddfe2;
+					margin: 2px 8px 0 0;
+				}
+				&:hover, &:active {
+					color: mix(#fff, $header-background-color, 90%);
+					svg {
+						fill: mix(#fff, $header-background-color, 90%);
+					}
+				}
+				&:last-child {
+					margin-right: 0;
+				}
+			}
+		}
+	}
+}
+.content {
+	width: $content-width;
+	margin: 0 auto;
+	.page-title {
+		display: flex;
+		align-items: center;
+		padding: 25px 0 10px 0;
+		h2 {
+			margin: 0;
+			padding: 0 0 7px 0;
+			font-size: 20px;
+			font-weight: 600;
+			color: lighten($heading-color, 5);
+		}
+		p {
+			margin: 0;
+			padding: 0;
+			font-size: 14px;
+			color: lighten($heading-color, 20);
+		}
+	}
+	.block {
+		box-shadow: 0px 0px 7px 1px rgba(45, 57, 68, 0.05);
+		margin: 25px 0;
+		padding: 25px;
+		border-radius: 5px;
+		background-color: #fff;
+		p {
+			padding: 7px;
+			margin: 0;
+		}
+	}
+	.profile-detail {
+		display: flex;
+		flex-flow: column;
+		font-size: 18px;
+		padding: 5px 0;
+		strong {
+			display: block;
+			color: lighten($heading-color, 30);
+			font-size: 14px;
+			font-weight: 500;
+			margin-bottom: 2px;
+		}
+	}
+	.profile-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 20px 35px;
+	}
+	.profile-detail-wide {
+		grid-column: 1 / -1;
+	}
+	.cv-panel-heading, .cv-actions, .profile-form-actions {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 15px;
+	}
+	.cv-panel-heading h3 {
+		font-size: 18px;
+		margin-bottom: 5px;
+	}
+	.cv-panel-heading p, .upload-message {
+		color: #777e86;
+		font-size: 14px;
+	}
+	.cv-upload {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+	.cv-upload label, .profile-form label {
+		color: #53585e;
+		font-size: 14px;
+		font-weight: 500;
+	}
+	.btn-secondary {
+		background: #68727d;
+	}
+	.btn-secondary:hover {
+		background: #535d68;
+	}
+	.profile-form {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 18px 25px;
+	}
+	.profile-form label {
+		display: flex;
+		flex-flow: column;
+		gap: 7px;
+	}
+	.profile-form .form-input {
+		font: inherit;
+	}
+	.profile-form-wide {
+		grid-column: 1 / -1;
+	}
+	.profile-form-actions {
+		grid-column: 1 / -1;
+		justify-content: flex-start;
+	}
+	.company-stat-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 20px;
+		.block {
+			margin: 0;
+			text-align: center;
+			strong, span {
+				display: block;
+			}
+			strong {
+				font-size: 28px;
+				color: #3e7bd6;
+			}
+			span {
+				color: #777e86;
+			}
+		}
+	}
+	.table-wrap {
+		overflow-x: auto;
+	}
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		th, td {
+			padding: 12px 10px;
+			border-bottom: 1px solid #edf0f2;
+			text-align: left;
+			white-space: nowrap;
+		}
+		th {
+			color: #53585e;
+			font-size: 14px;
+		}
+	}
+	.search-form {
+		display: grid;
+		grid-template-columns: 2fr 1fr 1fr auto;
+		gap: 12px;
+		align-items: center;
+	}
+	.dashboard-stats {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 20px;
+		.block { margin: 0; text-align: center; strong, span { display: block; } strong { font-size: 30px; color: #3e7bd6; } span { color: #777e86; } }
+	}
+	.dashboard-opportunities h3 { text-transform: uppercase; font-size: 18px; margin-bottom: 18px; }
+	.opportunity-row {
+		display: flex; align-items: center; justify-content: space-between; gap: 20px;
+		padding: 16px 0; border-top: 1px solid #edf0f2;
+		strong, span { display: block; }
+		strong { color: #474b50; }
+		span { margin-top: 5px; color: #777e86; font-size: 14px; }
+	}
+	.internship-list {
+		display: grid;
+		gap: 18px;
+	}
+	.internship-card {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 25px;
+		margin: 0;
+	}
+	.internship-card h3, .internship-detail h3, .application-panel h3 {
+		color: #474b50;
+		font-size: 18px;
+		margin: 0 0 7px;
+	}
+	.internship-card p, .internship-detail p {
+		color: #6b7179;
+		line-height: 1.6;
+	}
+	.internship-card .company-name {
+		color: #3e7bd6;
+		font-weight: 600;
+	}
+	.internship-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px 15px;
+		color: #777e86;
+		font-size: 14px;
+	}
+	.internship-detail h3 {
+		margin-top: 25px;
+	}
+	.application-panel label {
+		display: flex;
+		flex-flow: column;
+		gap: 7px;
+		margin-bottom: 15px;
+		color: #53585e;
+		font-size: 14px;
+		font-weight: 500;
+	}
+}
+
+@media (max-width: 640px) {
+	.header .wrapper, .content {
+		width: 100%;
+		padding-left: 20px;
+		padding-right: 20px;
+	}
+	.header .wrapper h1 {
+		font-size: 17px;
+	}
+	.header .wrapper .menu a {
+		padding: 0 7px;
+		font-size: 14px;
+	}
+	.content .block {
+		padding: 20px;
+	}
+	.content .profile-grid {
+		grid-template-columns: 1fr;
+		gap: 16px;
+	}
+	.content .profile-detail-wide {
+		grid-column: auto;
+	}
+	.content .cv-panel-heading, .content .cv-actions, .content .cv-upload {
+		align-items: flex-start;
+		flex-flow: column;
+	}
+	.content .profile-form {
+		grid-template-columns: 1fr;
+	}
+	.content .profile-form-wide, .content .profile-form-actions {
+		grid-column: auto;
+	}
+	.content .company-stat-grid {
+		grid-template-columns: 1fr;
+	}
+	.content .search-form {
+		grid-template-columns: 1fr;
+	}
+	.content .internship-card {
+		align-items: flex-start;
+		flex-flow: column;
+	}
+	.content .dashboard-stats {
+		grid-template-columns: 1fr;
+	}
+	.content .opportunity-row {
+		align-items: flex-start;
+		flex-flow: column;
+	}
+}
+@for $i from 1 to 6 {
+	.pad-#{$i} {
+		padding: #{$i*5}px;
+	}
+	.mar-#{$i} {
+		margin: #{$i*5}px;
+	}
+}
+@for $i from 1 to 6 {
+	.pad-bot-#{$i} {
+		padding-bottom: #{$i*5}px;
+	}
+	.pad-top-#{$i} {
+		padding-top: #{$i*5}px;
+	}
+	.pad-left-#{$i} {
+		padding-left: #{$i*5}px;
+	}
+	.pad-right-#{$i} {
+		padding-right: #{$i*5}px;
+	}
+	.pad-x-#{$i} {
+		padding-left: #{$i*5}px;
+		padding-right: #{$i*5}px;
+	}
+	.pad-y-#{$i} {
+		padding-top: #{$i*5}px;
+		padding-bottom: #{$i*5}px;
+	}
+	.mar-bot-#{$i} {
+		margin-bottom: #{$i*5}px;
+	}
+	.mar-top-#{$i} {
+		margin-top: #{$i*5}px;
+	}
+	.mar-left-#{$i} {
+		margin-left: #{$i*5}px;
+	}
+	.mar-right-#{$i} {
+		margin-right: #{$i*5}px;
+	}
+	.mar-x-#{$i} {
+		margin-left: #{$i*5}px;
+		margin-right: #{$i*5}px;
+	}
+	.mar-y-#{$i} {
+		margin-top: #{$i*5}px;
+		margin-bottom: #{$i*5}px;
+	}
+}
