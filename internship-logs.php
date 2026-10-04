@@ -36,7 +36,7 @@ $stmt->close();
 
 $student_internships = [];
 if ($student_id) {
-	$stmt = $con->prepare('SELECT i.id, i.start_date, i.end_date, i.status, p.title, c.company_name FROM internships i JOIN internship_posts p ON p.id = i.post_id JOIN companies c ON c.id = i.company_id WHERE i.student_id = ? ORDER BY i.start_date DESC, i.created_at DESC');
+	$stmt = $con->prepare('SELECT i.id, i.start_date, i.end_date, i.status, p.title, c.company_name FROM internships i JOIN internship_posts p ON p.id = i.post_id JOIN companies c ON c.id = i.company_id WHERE i.student_id = ? AND i.status <> "completed" ORDER BY i.start_date DESC, i.created_at DESC');
 	$stmt->bind_param('i', $student_id);
 	$stmt->execute();
 	$result = $stmt->get_result();
@@ -85,7 +85,7 @@ if ($student_id) {
 			JOIN internships i ON i.id = l.internship_id
 			JOIN internship_posts p ON p.id = i.post_id
 			JOIN companies c ON c.id = i.company_id
-			WHERE i.student_id = ?
+			WHERE i.student_id = ? AND i.status <> "completed"
 			ORDER BY l.log_date DESC, l.created_at DESC';
 	$stmt = $con->prepare($log_sql);
 	$stmt->bind_param('i', $student_id);
@@ -112,6 +112,7 @@ function e($value) {
 			<h1>Nhật ký thực tập</h1>
 			<nav class="menu">
 				<a href="home.php">Trang chủ</a>
+				<a href="student-portal.php">Quản lý thực tập</a>
 				<a href="internships.php">Tìm thực tập</a>
 				<a href="internship-logs.php">Nhật ký</a>
 				<a href="profile.php">Hồ sơ</a>
@@ -121,8 +122,7 @@ function e($value) {
 	</header>
 	<div class="content">
 		<div class="page-title">
-			<h2>Nhật ký thực tập</h2>
-			<p>Ghi lại công việc và kết quả trong quá trình thực tập.</p>
+			<h2>Công việc và kết quả trong quá trình thực tập</h2>
 		</div>
 
 		<?php if (!$student_id): ?>

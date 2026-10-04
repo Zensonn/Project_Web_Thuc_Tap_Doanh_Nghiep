@@ -1,11 +1,15 @@
 <?php
-// We need to use sessions, so you should always initialize sessions using the below function
+// Khởi tạo session để sử dụng thông báo đăng ký.
 session_start();
-// If the user is logged in, redirect to the home page
+// Nếu đã đăng nhập thì chuyển đến trang phù hợp.
 if (isset($_SESSION['account_loggedin'])) {
-	header('Location: home.php');
+	$role_dashboards = ['admin' => 'admin/index.php', 'lecturer' => 'lecturer/index.php', 'company' => 'company/dashboard.php', 'student' => 'home.php'];
+	header('Location: ' . ($role_dashboards[$_SESSION['account_role'] ?? 'student'] ?? 'home.php'));
 	exit;
 }
+$register_message = $_SESSION['register_message'] ?? null;
+$register_message_type = $_SESSION['register_message_type'] ?? 'error';
+unset($_SESSION['register_message'], $_SESSION['register_message_type']);
 ?>
 <!DOCTYPE html>
 <html>
@@ -19,6 +23,7 @@ if (isset($_SESSION['account_loggedin'])) {
 		<div class="login">
 
 			<h1>Đăng ký</h1>
+			<?php if ($register_message): ?><div class="login-message <?=htmlspecialchars($register_message_type, ENT_QUOTES, 'UTF-8')?>"><?=htmlspecialchars($register_message, ENT_QUOTES, 'UTF-8')?></div><?php endif; ?>
 
 			<form action="register-process.php" method="post" class="form login-form">
 

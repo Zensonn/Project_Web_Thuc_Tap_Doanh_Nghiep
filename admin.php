@@ -1,6 +1,11 @@
 <?php
 session_start();
 
+if (($_SESSION['account_role'] ?? '') === 'admin') {
+	header('Location: admin/index.php');
+	exit;
+}
+
 if (!isset($_SESSION['account_loggedin'])) {
 	header('Location: index.php');
 	exit;

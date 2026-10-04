@@ -2,23 +2,117 @@
 session_start();
 if (!isset($_SESSION['account_loggedin'])) { header('Location: index.php'); exit; }
 if (($_SESSION['account_role'] ?? '') !== 'student') { http_response_code(403); exit('Trang này chỉ dành cho sinh viên.'); }
+
 $con = mysqli_connect('localhost', 'root', '', 'phplogin');
 if (!$con) exit('Không thể kết nối cơ sở dữ liệu: ' . mysqli_connect_error());
+$stmt = $con->prepare('ALTER TABLE applications ADD COLUMN IF NOT EXISTS lecturer_id int unsigned DEFAULT NULL AFTER student_id');
+$stmt->execute();
+$stmt->close();
+
 $post_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 if (!$post_id) { header('Location: internships.php'); exit; }
-$user_id = (int)$_SESSION['account_id']; $message = null;
-$stmt = $con->prepare('SELECT p.*, c.company_name, c.address AS company_address, c.website FROM internship_posts p JOIN companies c ON c.id=p.company_id WHERE p.id=? AND p.status="published"'); $stmt->bind_param('i', $post_id); $stmt->execute(); $post = $stmt->get_result()->fetch_assoc(); $stmt->close(); if (!$post) { http_response_code(404); exit('Không tìm thấy vị trí thực tập.'); }
-$stmt = $con->prepare('SELECT s.id, s.cv_file, a.id AS application_id, a.status FROM students s LEFT JOIN applications a ON a.student_id=s.id AND a.post_id=? WHERE s.user_id=?'); $stmt->bind_param('ii', $post_id, $user_id); $stmt->execute(); $student = $stmt->get_result()->fetch_assoc(); $stmt->close();
+$user_id = (int)$_SESSION['account_id'];
+$message = null;
+
+$stmt = $con->prepare('SELECT p.*, c.company_name, c.address AS company_address, c.website FROM internship_posts p JOIN companies c ON c.id=p.company_id WHERE p.id=? AND p.status="published"');
+$stmt->bind_param('i', $post_id);
+$stmt->execute();
+$post = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+if (!$post) { http_response_code(404); exit('Không tìm thấy vị trí thực tập.'); }
+
+$stmt = $con->prepare('SELECT s.id, s.cv_file, a.id AS application_id, a.status FROM students s LEFT JOIN applications a ON a.student_id=s.id AND a.post_id=? WHERE s.user_id=?');
+$stmt->bind_param('ii', $post_id, $user_id);
+$stmt->execute();
+$student = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+$has_accepted_internship = false;
+if ($student) {
+	$stmt = $con->prepare('SELECT COUNT(*) FROM applications a LEFT JOIN internships i ON i.application_id=a.id WHERE a.student_id=? AND a.status="accepted" AND (i.id IS NULL OR i.status<>"cancelled")');
+	$stmt->bind_param('i', $student['id']);
+	$stmt->execute();
+	$stmt->bind_result($accepted_count);
+	$stmt->fetch();
+	$stmt->close();
+	$has_accepted_internship = $accepted_count > 0;
+}
+$lecturers = $con->query('SELECT l.id, l.full_name, l.lecturer_code, l.department FROM lecturers l JOIN users u ON u.id=l.user_id WHERE u.role="lecturer" ORDER BY l.full_name');
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-	if (!$student) $message = 'Vui lòng cập nhật hồ sơ sinh viên trước khi nộp đơn.';
-	elseif ($_POST['action'] === 'apply' && !$student['application_id']) {
-		$cover_letter = trim($_POST['cover_letter'] ?? ''); $resume_url = $student['cv_file'] ?: null;
-		$stmt = $con->prepare('INSERT INTO applications (post_id, student_id, cover_letter, resume_url) VALUES (?, ?, ?, ?)'); $stmt->bind_param('iiss', $post_id, $student['id'], $cover_letter, $resume_url); if ($stmt->execute()) { header('Location: internship-detail.php?id=' . $post_id . '&applied=1'); exit; } $message = 'Không thể nộp đơn cho vị trí này.'; $stmt->close();
-	} elseif ($_POST['action'] === 'withdraw' && $student['application_id'] && in_array($student['status'], ['submitted','reviewing'], true)) {
-		$stmt = $con->prepare('UPDATE applications SET status="withdrawn" WHERE id=? AND student_id=?'); $stmt->bind_param('ii', $student['application_id'], $student['id']); $stmt->execute(); $stmt->close(); header('Location: internship-detail.php?id=' . $post_id . '&withdrawn=1'); exit;
+	if (!$student) {
+		$message = 'Vui lòng cập nhật hồ sơ sinh viên trước khi nộp đơn.';
+	} elseif ($_POST['action'] === 'apply' && $has_accepted_internship) {
+		$message = 'Bạn đã được nhận thực tập và không thể ứng tuyển thêm tại công ty khác.';
+	} elseif ($_POST['action'] === 'apply' && !$student['application_id']) {
+		$lecturer_id = filter_input(INPUT_POST, 'lecturer_id', FILTER_VALIDATE_INT);
+		$cover_letter = trim($_POST['cover_letter'] ?? '');
+		$resume_url = $student['cv_file'] ?: null;
+		$lecturer_valid = false;
+		if ($lecturer_id) {
+			$lecturer_stmt = $con->prepare('SELECT l.id FROM lecturers l JOIN users u ON u.id=l.user_id WHERE l.id=? AND u.role="lecturer"');
+			$lecturer_stmt->bind_param('i', $lecturer_id);
+			$lecturer_stmt->execute();
+			$lecturer_stmt->store_result();
+			$lecturer_valid = $lecturer_stmt->num_rows === 1;
+			$lecturer_stmt->close();
+		}
+		if (!$lecturer_valid) {
+			$message = 'Vui lòng chọn giảng viên hướng dẫn.';
+		} else {
+			$stmt = $con->prepare('INSERT INTO applications (post_id, student_id, lecturer_id, cover_letter, resume_url) VALUES (?, ?, ?, ?, ?)');
+			$stmt->bind_param('iiiss', $post_id, $student['id'], $lecturer_id, $cover_letter, $resume_url);
+			if ($stmt->execute()) { header('Location: internship-detail.php?id=' . $post_id . '&applied=1'); exit; }
+			$message = 'Không thể nộp đơn cho vị trí này.';
+			$stmt->close();
+		}
+	} elseif ($_POST['action'] === 'withdraw' && $student['application_id'] && in_array($student['status'], ['submitted', 'reviewing'], true)) {
+		$stmt = $con->prepare('UPDATE applications SET status="withdrawn" WHERE id=? AND student_id=?');
+		$stmt->bind_param('ii', $student['application_id'], $student['id']);
+		$stmt->execute();
+		$stmt->close();
+		header('Location: internship-detail.php?id=' . $post_id . '&withdrawn=1');
+		exit;
 	}
 }
-if (isset($_GET['applied'])) $message = 'Đã nộp đơn ứng tuyển thành công.'; elseif (isset($_GET['withdrawn'])) $message = 'Đã rút đơn ứng tuyển.';
-$type_labels = ['full_time'=>'Toàn thời gian','part_time'=>'Bán thời gian','remote'=>'Từ xa','hybrid'=>'Kết hợp']; $status_labels = ['submitted'=>'Đã nộp','reviewing'=>'Đang xem xét','accepted'=>'Được chấp nhận','rejected'=>'Bị từ chối','withdrawn'=>'Đã rút']; function e($value) { return htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8'); }
+
+if (isset($_GET['applied'])) $message = 'Đã nộp đơn ứng tuyển thành công.';
+elseif (isset($_GET['withdrawn'])) $message = 'Đã rút đơn ứng tuyển.';
+$type_labels = ['full_time'=>'Toàn thời gian','part_time'=>'Bán thời gian','remote'=>'Từ xa','hybrid'=>'Kết hợp'];
+$status_labels = ['submitted'=>'Đã nộp','reviewing'=>'Đang xem xét','accepted'=>'Được chấp nhận','rejected'=>'Bị từ chối','withdrawn'=>'Đã rút'];
+function e($value) { return htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8'); }
 ?>
-<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,minimum-scale=1"><title><?=e($post['title'])?></title><link href="css/style.css" rel="stylesheet" type="text/css"></head><body><header class="header"><div class="wrapper"><h1>Cơ hội thực tập</h1><nav class="menu"><a href="home.php">Trang chủ</a><a href="internships.php">Tìm thực tập</a><a href="profile.php">Hồ sơ</a><a href="logout.php">Đăng xuất</a></nav></div></header><div class="content"><div class="page-title"><h2><?=e($post['title'])?></h2><p><?=e($post['company_name'])?></p></div><div class="block internship-detail"><div class="internship-meta"><span><?=e($post['location'] ?: 'Linh hoạt')?></span><span><?=e($type_labels[$post['employment_type']] ?? $post['employment_type'])?></span><span><?=e($post['quantity'])?> vị trí</span><?php if ($post['deadline']): ?><span>Hạn <?=e(date('d/m/Y', strtotime($post['deadline'])))?></span><?php endif; ?></div><h3>Mô tả công việc</h3><p><?=nl2br(e($post['description']))?></p><?php if ($post['requirements']): ?><h3>Yêu cầu</h3><p><?=nl2br(e($post['requirements']))?></p><?php endif; ?><?php if ($post['benefits']): ?><h3>Quyền lợi</h3><p><?=nl2br(e($post['benefits']))?></p><?php endif; ?><h3>Thông tin doanh nghiệp</h3><p><?=e($post['company_name'])?><br><?=e($post['company_address'])?><?php if ($post['website']): ?><br><a href="<?=e($post['website'])?>" target="_blank" rel="noopener">Website doanh nghiệp</a><?php endif; ?></p></div><div class="block application-panel"><?php if ($message): ?><p class="upload-message"><?=e($message)?></p><?php endif; ?><?php if ($student && $student['application_id']): ?><p>Trạng thái đơn: <strong><?=e($status_labels[$student['status']] ?? $student['status'])?></strong></p><?php if (in_array($student['status'], ['submitted','reviewing'], true)): ?><form method="post"><input type="hidden" name="action" value="withdraw"><button class="btn btn-secondary" type="submit">Rút đơn</button></form><?php endif; ?><?php else: ?><h3>Nộp đơn ứng tuyển</h3><?php if (!$student || !$student['cv_file']): ?><p>Bạn nên cập nhật hồ sơ và tải CV trước khi ứng tuyển.</p><?php endif; ?><form method="post"><input type="hidden" name="action" value="apply"><label>Thư giới thiệu<textarea class="form-input" name="cover_letter" rows="6" placeholder="Giới thiệu ngắn về bạn..."></textarea></label><button class="btn" type="submit">Nộp đơn</button></form><?php endif; ?></div></div></body></html>
+<!DOCTYPE html>
+<html lang="vi">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,minimum-scale=1"><title><?=e($post['title'])?></title><link href="css/style.css" rel="stylesheet" type="text/css"></head>
+<body>
+<header class="header"><div class="wrapper"><h1>Cơ hội thực tập</h1><nav class="menu"><a href="home.php">Trang chủ</a><a href="student-portal.php">Quản lý thực tập</a><a href="internships.php">Tìm thực tập</a><a href="profile.php">Hồ sơ</a><a href="logout.php">Đăng xuất</a></nav></div></header>
+<div class="content">
+	<div class="page-title"><h2><?=e($post['title'])?></h2><p><?=e($post['company_name'])?></p></div>
+	<div class="block internship-detail">
+		<div class="internship-meta"><span><?=e($post['location'] ?: 'Linh hoạt')?></span><span><?=e($type_labels[$post['employment_type']] ?? $post['employment_type'])?></span><span><?=e($post['quantity'])?> vị trí</span><?php if ($post['deadline']): ?><span>Hạn <?=e(date('d/m/Y', strtotime($post['deadline'])))?></span><?php endif; ?></div>
+		<h3>Mô tả công việc</h3><p><?=nl2br(e($post['description']))?></p>
+		<?php if ($post['requirements']): ?><h3>Yêu cầu</h3><p><?=nl2br(e($post['requirements']))?></p><?php endif; ?>
+		<?php if ($post['benefits']): ?><h3>Quyền lợi</h3><p><?=nl2br(e($post['benefits']))?></p><?php endif; ?>
+		<h3>Thông tin doanh nghiệp</h3><p><?=e($post['company_name'])?><br><?=e($post['company_address'])?><?php if ($post['website']): ?><br><a href="<?=e($post['website'])?>" target="_blank" rel="noopener">Website doanh nghiệp</a><?php endif; ?></p>
+	</div>
+	<div class="block application-panel">
+		<?php if ($message): ?><p class="upload-message"><?=e($message)?></p><?php endif; ?>
+		<?php if ($student && $student['application_id']): ?>
+			<p>Trạng thái đơn: <strong><?=e($status_labels[$student['status']] ?? $student['status'])?></strong></p>
+			<?php if (in_array($student['status'], ['submitted','reviewing'], true)): ?><form method="post"><input type="hidden" name="action" value="withdraw"><button class="btn btn-secondary" type="submit">Rút đơn</button></form><?php endif; ?>
+		<?php elseif ($has_accepted_internship): ?>
+			<p>Bạn đã được nhận thực tập nên không thể ứng tuyển thêm tại công ty khác.</p>
+		<?php else: ?>
+			<h3>Nộp đơn ứng tuyển</h3>
+			<?php if (!$student || !$student['cv_file']): ?><p>Bạn nên cập nhật hồ sơ và tải CV trước khi ứng tuyển.</p><?php endif; ?>
+			<form method="post">
+				<input type="hidden" name="action" value="apply">
+				<label>Giảng viên hướng dẫn<select class="form-input" name="lecturer_id" required><option value="">-- Chọn giảng viên --</option><?php while ($lecturer = $lecturers->fetch_assoc()): ?><option value="<?=e($lecturer['id'])?>"><?=e($lecturer['full_name'])?> (<?=e($lecturer['lecturer_code'])?><?= $lecturer['department'] ? ' - ' . e($lecturer['department']) : '' ?>)</option><?php endwhile; ?></select></label>
+				<label>Thư giới thiệu<textarea class="form-input" name="cover_letter" rows="6" placeholder="Giới thiệu ngắn về bạn..."></textarea></label>
+				<button class="btn" type="submit">Nộp đơn</button>
+			</form>
+		<?php endif; ?>
+	</div>
+</div>
+</body>
+</html>

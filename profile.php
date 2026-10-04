@@ -1,12 +1,17 @@
 <?php
-// We need to use sessions, so you should always initialize sessions using the below function
+// Khởi tạo session để kiểm tra đăng nhập.
 session_start();
-// If the user is not logged in, redirect to the login page
+// Nếu chưa đăng nhập thì chuyển về trang đăng nhập.
 if (!isset($_SESSION['account_loggedin'])) {
 	header('Location: index.php');
 	exit;
 }
-// Change the below variables to reflect your MySQL database details
+if (($_SESSION['account_role'] ?? '') !== 'student') {
+	$role_dashboards = ['admin' => 'admin/index.php', 'lecturer' => 'lecturer/index.php', 'company' => 'company/dashboard.php'];
+	header('Location: ' . ($role_dashboards[$_SESSION['account_role'] ?? ''] ?? 'home.php'));
+	exit;
+}
+// Thông tin kết nối cơ sở dữ liệu.
 $DATABASE_HOST = 'localhost';
 $DATABASE_USER = 'root';
 $DATABASE_PASS = '';
@@ -22,9 +27,9 @@ $gender_labels = [
 	'female' => 'Nữ',
 	'other' => 'Khác'
 ];
-// Try and connect using the info above
+// Kết nối đến cơ sở dữ liệu.
 $con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
-// Ensure there are no connection errors
+// Đảm bảo kết nối không có lỗi.
 if (mysqli_connect_errno()) {
 	exit('Failed to connect to MySQL: ' . mysqli_connect_error());
 }
@@ -92,18 +97,15 @@ $formatted_birth_date = $date_of_birth ? date('d/m/Y', strtotime($date_of_birth)
 
 			<div class="wrapper">
 
-				<h1>Website Title</h1>
+				<h1>Hồ sơ</h1>
 				
 				<nav class="menu">
-					<a href="home.php">Home</a>
-					<a href="profile.php">Profile</a>
-					<?php if (($_SESSION['account_role'] ?? '') === 'student'): ?>
-						<a href="internship-logs.php">Nhật ký</a>
-					<?php endif; ?>
-					<a href="logout.php">
-						<svg width="12" height="12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"/></svg>
-						Logout
-					</a>
+					<a href="home.php">Trang chủ</a>
+					<a href="student-portal.php">Quản lý thực tập</a>
+					<a href="internships.php">Tìm thực tập</a>
+					<a href="internship-logs.php">Nhật ký</a>
+					<a href="profile.php">Hồ sơ</a>
+					<a href="logout.php">Đăng xuất</a>
 				</nav>
 
 			</div>
@@ -115,7 +117,6 @@ $formatted_birth_date = $date_of_birth ? date('d/m/Y', strtotime($date_of_birth)
 			<div class="page-title">
 				<div class="wrap">
 					<h2>Thông tin cá nhân</h2>
-					<p>Thông tin hồ sơ sinh viên</p>
 				</div>
 			</div>
 

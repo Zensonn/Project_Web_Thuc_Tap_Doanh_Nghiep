@@ -1,63 +1,71 @@
 <?php
-// Start the session
+// Khởi tạo session.
 session_start();
-// Change the below variables to reflect your MySQL database details
+function login_error($message) {
+    $_SESSION['login_error'] = $message;
+    header('Location: index.php');
+    exit;
+}
+// Thông tin kết nối cơ sở dữ liệu.
 $DATABASE_HOST = 'localhost';
 $DATABASE_USER = 'root';
 $DATABASE_PASS = '';
 $DATABASE_NAME = 'phplogin';
-// Try and connect using the info above
+// Kết nối đến cơ sở dữ liệu.
 $con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
-// Check for connection errors
+// Kiểm tra lỗi kết nối.
 if (mysqli_connect_errno()) {
-	// If there is an error with the connection, stop the script and display the error
+    // Dừng xử lý nếu kết nối thất bại.
 	exit('Failed to connect to MySQL: ' . mysqli_connect_error());
 }
-// Now we check if the data from the login form was submitted, isset() will check if the data exists
+// Kiểm tra dữ liệu được gửi từ form đăng nhập.
 if (!isset($_POST['username'], $_POST['password'])) {
-	// Could not get the data that should have been sent
-	exit('Please fill both the username and password fields!');
+    login_error('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.');
 }
-// Prepare our SQL, which will prevent SQL injection
-if ($stmt = $con->prepare('SELECT id, password, activation_code, role FROM accounts WHERE username = ?')) {
-	// Bind parameters (s = string, i = int, b = blob, etc), in our case the username is a string so we use "s"
+// Dùng câu lệnh chuẩn bị để tránh SQL injection.
+if ($stmt = $con->prepare('SELECT id, password, activation_code, role, status FROM users WHERE username = ?')) {
+    // Gắn tham số username kiểu chuỗi.
 	$stmt->bind_param('s', $_POST['username']);
 	$stmt->execute();
-	// Store the result so we can check if the account exists in the database
+    // Lưu kết quả để kiểm tra tài khoản có tồn tại.
 	$stmt->store_result();
-    // Check if account exists with the input username
+    // Kiểm tra tài khoản theo username.
     if ($stmt->num_rows > 0) {
-        // Account exists, so bind the results to variables
-        $stmt->bind_result($id, $password, $activation_code, $role);
+        // Gắn dữ liệu tài khoản vào các biến.
+        $stmt->bind_result($id, $password, $activation_code, $role, $status);
         $stmt->fetch();
-		// Check if the account is activated
+        if ($status !== 'active') {
+			login_error($status === 'blocked' ? 'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.' : 'Tài khoản chưa được kích hoạt.');
+        }
+        // Kiểm tra tài khoản đã được kích hoạt.
 		if ($activation_code != 'activated') {
-			// Account is not activated
-			echo 'Account is not activated! Please check your email for the activation link!';
-			exit;
+            login_error('Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email để kích hoạt.');
 		}
-        // Note: remember to use password_hash in your registration file to store the hashed passwords
+        // Mật khẩu được lưu dưới dạng đã mã hóa bằng password_hash.
         if (password_verify($_POST['password'], $password)) {
-            // Password is correct! User has logged in!
-            // Regenerate the session ID to prevent session fixation attacks
+            // Đăng nhập thành công.
+            // Tạo lại session ID để tránh session fixation.
             session_regenerate_id();
-            // Declare session variables (they basically act like cookies but the data is remembered on the server)
+            // Lưu thông tin tài khoản vào session.
             $_SESSION['account_loggedin'] = TRUE;
             $_SESSION['account_name'] = $_POST['username'];
             $_SESSION['account_id'] = $id;
 			$_SESSION['account_role'] = $role;
-            // Send administrators to their dedicated dashboard
-            header('Location: ' . ($role === 'admin' ? 'admin.php' : 'home.php'));
+            $role_dashboards = [
+                'admin' => 'admin/index.php',
+                'lecturer' => 'lecturer/index.php',
+                'company' => 'company/dashboard.php',
+                'student' => 'home.php'
+            ];
+            header('Location: ' . ($role_dashboards[$role] ?? 'home.php'));
             exit;
         } else {
-            // Incorrect password
-            echo 'Incorrect username and/or password!';
+			login_error('Tên đăng nhập hoặc mật khẩu không chính xác.');
         }
     } else {
-        // Incorrect username
-        echo 'Incorrect username and/or password!';
+		login_error('Tên đăng nhập hoặc mật khẩu không chính xác.');
     }
-    // Close the prepared statement
+	// Đóng câu lệnh chuẩn bị.
 	$stmt->close();
 }
 ?>

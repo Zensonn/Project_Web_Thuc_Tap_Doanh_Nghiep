@@ -1,9 +1,9 @@
 <?php
-// Start the session
+// Khởi tạo session.
 session_start();
-// Destroy the active session, which logs the user out
+// Hủy session hiện tại để đăng xuất.
 session_destroy();
-// Redirect to the login pag
+// Chuyển về trang đăng nhập.
 header('Location: index.php');
 exit;
 ?>

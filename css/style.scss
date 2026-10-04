@@ -228,6 +228,11 @@ h1, h2, h3, h4, h5, h6 {
 			margin: 0;
 		}
 	}
+	.internship-table-block {
+		width: min(1200px, calc(100vw - 40px));
+		margin-left: 50%;
+		transform: translateX(-50%);
+	}
 	.profile-detail {
 		display: flex;
 		flex-flow: column;
@@ -319,16 +324,55 @@ h1, h2, h3, h4, h5, h6 {
 		}
 	}
 	.table-wrap {
-		overflow-x: auto;
+		width: 100%;
+		overflow-x: hidden;
 	}
 	table {
 		width: 100%;
+		table-layout: fixed;
 		border-collapse: collapse;
 		th, td {
 			padding: 12px 10px;
 			border-bottom: 1px solid #edf0f2;
 			text-align: left;
-			white-space: nowrap;
+			overflow-wrap: anywhere;
+		}
+		form { margin: 0; }
+		.form-input {
+			width: 100%;
+			min-width: 0;
+			padding-left: 6px;
+			padding-right: 6px;
+		}
+		.internship-table {
+			font-size: 13px;
+			.internship-col-student { width: 16%; }
+			.internship-col-company { width: 12%; }
+			.internship-col-position { width: 9%; }
+			.internship-col-date { width: 13%; }
+			.internship-col-supervisor { width: 16%; }
+			.internship-col-status { width: 13%; }
+			.internship-col-action { width: 8%; }
+			th, td { padding: 8px 5px; }
+			.form-input {
+				height: 34px;
+				padding-left: 3px;
+				padding-right: 3px;
+				font-size: 12px;
+			}
+			.internship-status-cell form,
+			.internship-action-cell form {
+				display: flex;
+				flex-direction: column;
+				gap: 5px;
+			}
+			.internship-status-cell button,
+			.internship-action-cell button {
+				width: 100%;
+				height: 32px;
+				padding: 0 4px;
+				font-size: 12px;
+			}
 		}
 		th {
 			color: #53585e;
@@ -416,6 +460,11 @@ h1, h2, h3, h4, h5, h6 {
 	.content .block {
 		padding: 20px;
 	}
+	.content .internship-table-block {
+		width: 100%;
+		margin-left: 0;
+		transform: none;
+	}
 	.content .profile-grid {
 		grid-template-columns: 1fr;
 		gap: 16px;
@@ -500,4 +549,96 @@ h1, h2, h3, h4, h5, h6 {
 		margin-top: #{$i*5}px;
 		margin-bottom: #{$i*5}px;
 	}
+}
+
+.content.student-portal {
+	width: min(1100px, calc(100vw - 40px));
+	.page-title {
+		display: block;
+		padding: 32px 0 12px;
+		h2 { font-size: 28px; color: #263746; }
+		p { margin-top: 8px; color: #6b7179; }
+	}
+	.portal-section {
+		display: block;
+		margin: 16px 0;
+		padding: 25px 28px;
+		background: #fff;
+		border: 1px solid #e2e7eb;
+		border-top: 4px solid #3e7bd6;
+		border-radius: 8px;
+		box-shadow: 0 4px 14px rgba(45, 57, 68, 0.06);
+	}
+	.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 20px; }
+	.section-heading h3 { margin: 0 0 6px; color: #263746; font-size: 19px; }
+	.section-heading p { margin: 0; color: #6b7179; font-size: 14px; }
+	.table-wrap { overflow-x: auto; }
+	table { min-width: 620px; th { background: #f7f9fa; } }
+	.progress-item { display: block; padding: 18px; border: 1px solid #e5e9ed; border-radius: 6px; & + .progress-item { margin-top: 14px; } }
+	.progress-item-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+	.progress-item-header strong, .progress-item-header span { display: block; }
+	.progress-item-header strong { color: #263746; font-size: 16px; }
+	.progress-item-header div > span { margin-top: 6px; color: #6b7179; font-size: 14px; }
+	.progress-track { display: block; height: 10px; margin: 20px 0 9px; overflow: hidden; background: #e9edf0; border-radius: 6px; span { display: block; height: 100%; background: #3e7bd6; border-radius: inherit; } }
+	.progress-caption { display: flex; justify-content: space-between; gap: 12px; color: #777e86; font-size: 13px; }
+	.report-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; label { display: flex; flex-direction: column; gap: 7px; min-width: 0; color: #53585e; font-size: 14px; font-weight: 600; &:nth-of-type(3), &:nth-of-type(4), &:nth-of-type(5) { grid-column: 1 / -1; } span { color: #777e86; font-weight: 400; } } button { grid-column: 1 / -1; } .form-input { width: 100%; min-width: 0; height: 42px; padding: 9px 11px; border: 1px solid #cfd6dc; border-radius: 5px; background: #fff; font: inherit; } textarea.form-input { height: auto; min-height: 130px; resize: vertical; } }
+	.evaluation-item { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px 20px; padding: 16px; border: 1px solid #e5e9ed; border-radius: 6px; p { flex-basis: 100%; margin: 0; color: #6b7179; line-height: 1.5; } }
+}
+
+@media (max-width: 640px) {
+	.content.student-portal { width: 100%; .portal-section { padding: 20px; } .section-heading, .progress-item-header { align-items: flex-start; flex-direction: column; } .report-form { grid-template-columns: 1fr; label:nth-of-type(3), label:nth-of-type(4), label:nth-of-type(5), button { grid-column: auto; } } }
+}
+
+.company-internship-list {
+	display: grid;
+	gap: 18px;
+}
+.company-internship-card {
+	padding: 22px 24px;
+	background: #fff;
+	border: 1px solid #e2e7eb;
+	border-radius: 8px;
+	box-shadow: 0 3px 10px rgba(45, 57, 68, 0.05);
+}
+.company-internship-card-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 18px;
+	padding-bottom: 16px;
+	border-bottom: 1px solid #edf0f2;
+	h3 { margin: 0 0 6px; color: #263746; font-size: 18px; }
+	p { margin: 0; color: #6b7179; font-size: 14px; }
+}
+.company-internship-summary {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 16px;
+	padding: 18px 0;
+	strong, span { display: block; }
+	strong { margin-bottom: 5px; color: #777e86; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+	span { color: #263746; font-size: 14px; }
+}
+.company-internship-actions {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 14px;
+	padding-top: 16px;
+	border-top: 1px solid #edf0f2;
+}
+.inline-action-form {
+	display: flex;
+	align-items: flex-end;
+	gap: 8px;
+	min-width: 0;
+	label { display: flex; flex: 1; flex-direction: column; gap: 6px; min-width: 0; color: #53585e; font-size: 12px; font-weight: 600; }
+	.form-input { width: 100%; min-width: 0; height: 38px; padding: 7px 8px; border: 1px solid #cfd6dc; border-radius: 4px; background: #fff; font: inherit; }
+	.btn { flex: 0 0 auto; height: 38px; padding: 0 11px; font-size: 12px; }
+}
+
+@media (max-width: 640px) {
+	.company-internship-card { padding: 18px; }
+	.company-internship-card-header { flex-direction: column; }
+	.company-internship-summary, .company-internship-actions { grid-template-columns: 1fr; }
+	.inline-action-form { align-items: stretch; flex-direction: column; }
 }

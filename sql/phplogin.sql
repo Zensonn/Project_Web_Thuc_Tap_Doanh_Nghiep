@@ -96,6 +96,15 @@ CREATE TABLE IF NOT EXISTS `lecturers` (
 	CONSTRAINT `fk_lecturers_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `majors` (
+	`id` int unsigned NOT NULL AUTO_INCREMENT,
+	`name` varchar(150) NOT NULL,
+	`faculty` varchar(150) DEFAULT NULL,
+	`status` enum('active','inactive') NOT NULL DEFAULT 'active',
+	PRIMARY KEY (`id`),
+	UNIQUE KEY `uq_major_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `internship_posts` (
 	`id` int unsigned NOT NULL AUTO_INCREMENT,
 	`company_id` int unsigned NOT NULL,
@@ -119,16 +128,20 @@ CREATE TABLE IF NOT EXISTS `applications` (
 	`id` int unsigned NOT NULL AUTO_INCREMENT,
 	`post_id` int unsigned NOT NULL,
 	`student_id` int unsigned NOT NULL,
+	`lecturer_id` int unsigned DEFAULT NULL,
 	`cover_letter` text,
 	`resume_url` varchar(255) DEFAULT NULL,
 	`status` enum('submitted','reviewing','accepted','rejected','withdrawn') NOT NULL DEFAULT 'submitted',
 	`applied_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`reviewed_at` timestamp NULL DEFAULT NULL,
+	`accepted_at` timestamp NULL DEFAULT NULL,
 	PRIMARY KEY (`id`),
 	UNIQUE KEY `uq_application_student_post` (`post_id`,`student_id`),
 	KEY `idx_applications_student` (`student_id`),
+	KEY `idx_applications_lecturer` (`lecturer_id`),
 	CONSTRAINT `fk_applications_post` FOREIGN KEY (`post_id`) REFERENCES `internship_posts` (`id`) ON DELETE CASCADE,
-	CONSTRAINT `fk_applications_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE
+	CONSTRAINT `fk_applications_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE,
+	CONSTRAINT `fk_applications_lecturer` FOREIGN KEY (`lecturer_id`) REFERENCES `lecturers` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `internships` (
@@ -143,6 +156,8 @@ CREATE TABLE IF NOT EXISTS `internships` (
 	`status` enum('planned','ongoing','completed','cancelled') NOT NULL DEFAULT 'planned',
 	`company_supervisor` varchar(150) DEFAULT NULL,
 	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`completed_at` timestamp NULL DEFAULT NULL,
+	`cancelled_at` timestamp NULL DEFAULT NULL,
 	PRIMARY KEY (`id`),
 	UNIQUE KEY `uq_internship_application` (`application_id`),
 	KEY `idx_internships_student_status` (`student_id`,`status`),

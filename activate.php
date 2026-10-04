@@ -1,32 +1,32 @@
 <?php
-// Change the below variables to reflect your MySQL database details
+// Thông tin kết nối cơ sở dữ liệu.
 $DATABASE_HOST = 'localhost';
 $DATABASE_USER = 'root';
 $DATABASE_PASS = '';
 $DATABASE_NAME = 'phplogin';
-// Try and connect using the info above
+// Kết nối đến cơ sở dữ liệu.
 $con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
-// Check for connection errors
+// Kiểm tra lỗi kết nối.
 if (mysqli_connect_errno()) {
-	// If there is an error with the connection, stop the script and display the error
+	// Dừng xử lý nếu kết nối thất bại.
 	exit('Failed to connect to MySQL: ' . mysqli_connect_error());
 }
-// First we check if the email and code GET parameters exists
+// Kiểm tra email và mã kích hoạt trong tham số GET.
 if (isset($_GET['email'], $_GET['code']) && !empty($_GET['code'])) {
-	// Parameters are set, so we can proceed with the activation
+	// Đủ tham số nên có thể tiến hành kích hoạt.
 	if ($stmt = $con->prepare('SELECT * FROM accounts WHERE email = ? AND activation_code = ?')) {
 		$stmt->bind_param('ss', $_GET['email'], $_GET['code']);
 		$stmt->execute();
-		// Store the result so we can check if the account exists in the database.
+		// Lưu kết quả để kiểm tra tài khoản.
 		$stmt->store_result();
-		// Check if account exists with the emai and code
+		// Kiểm tra tài khoản theo email và mã kích hoạt.
 		if ($stmt->num_rows > 0) {
-			// Account exists with the requested email and code, update the activation code to 'activated'
+			// Tài khoản hợp lệ, cập nhật trạng thái đã kích hoạt.
 			if ($stmt = $con->prepare('UPDATE accounts SET activation_code = "activated" WHERE email = ? AND activation_code = ?')) {
-				// bind parameters (s = string, i = int, b = blob, etc)
+				// Gắn các tham số cho câu lệnh.
 				$stmt->bind_param('ss', $_GET['email'], $_GET['code']);
 				$stmt->execute();
-				// Output success message
+				// Hiển thị thông báo thành công.
 				echo 'Your account is now activated! You can now login!<br><a href="index.php">Login</a>';
 			}
 		} else {

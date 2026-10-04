@@ -1,11 +1,13 @@
 <?php
-// We need to use sessions, so you should always initialize sessions using the below function
+// Khởi tạo session để sử dụng trạng thái đăng nhập.
 session_start();
-// If the user is logged in, redirect to the home page
+// Nếu đã đăng nhập thì chuyển đến trang phù hợp.
 if (isset($_SESSION['account_loggedin'])) {
 	header('Location: home.php');
 	exit;
 }
+$login_error = $_SESSION['login_error'] ?? null;
+unset($_SESSION['login_error']);
 ?>
 <!DOCTYPE html>
 <html>
@@ -19,6 +21,7 @@ if (isset($_SESSION['account_loggedin'])) {
 		<div class="login">
 
 			<h1>Đăng nhập với vai trò</h1>
+			<?php if ($login_error): ?><div class="login-message"><?=htmlspecialchars($login_error, ENT_QUOTES, 'UTF-8')?></div><?php endif; ?>
 
 			<form action="authenticate.php" method="post" class="form login-form">
 
